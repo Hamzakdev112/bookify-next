@@ -31,3 +31,4 @@ Building with Express and React was great but eventually there comes a time wher
 
 - Refer to [SETUP](/docs/SETUP.md)
 - The project comes with snippets to speed up development. Refer to [Snippets](/docs/SNIPPETS.md).
+# bookify-next
