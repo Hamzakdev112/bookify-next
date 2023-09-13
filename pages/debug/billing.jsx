@@ -10,7 +10,7 @@ const BillingAPI = () => {
   const [responseData, setResponseData] = useState("");
   const app = useAppBridge();
   const fetch = useFetch();
-  const redirect = Redirect.create(app);
+  const redirect = Redirect.create(app); 
 
   async function fetchContent() {
     setResponseData("loading...");

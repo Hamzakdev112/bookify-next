@@ -1,12 +1,11 @@
-import prisma from "../prisma";
+import { connectToDatabase } from "@/libs/mongo";
+import StoreModel from "@/models/StoreModel";
 
 const isShopAvailable = async (context) => {
   const shop = context.query.shop;
-
+  connectToDatabase()
   if (shop) {
-    const isShopAvailable = await prisma.stores.findUnique({
-      where: { shop: shop },
-    });
+    const isShopAvailable = await StoreModel.findOne({shop})
 
     if (!isShopAvailable || !isShopAvailable?.isActive) {
       return {

@@ -1,3 +1,4 @@
+import { connectToDatabase } from "@/libs/mongo";
 import sessionHandler from "@/utils/sessionHandler.js";
 import shopify from "@/utils/shopify.js";
 import {
@@ -8,6 +9,7 @@ import {
 
 const handler = async (req, res) => {
   try {
+    await connectToDatabase()
     const callbackResponse = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,

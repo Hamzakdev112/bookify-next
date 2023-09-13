@@ -27,6 +27,7 @@ const verifyRequest = async (req, res, next) => {
         "Content-Security-Policy",
         `frame-ancestors https://${session.shop} https://admin.shopify.com;`
       );
+      res.shop = session.shop
       await next();
       return;
     }

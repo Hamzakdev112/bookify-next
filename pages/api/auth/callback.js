@@ -3,12 +3,14 @@ import {
   InvalidOAuthError,
   InvalidSession,
 } from "@shopify/shopify-api";
-import prisma from "@/utils/prisma";
 import sessionHandler from "@/utils/sessionHandler.js";
 import shopify from "@/utils/shopify.js";
+import { connectToDatabase } from "@/libs/mongo";
+import StoreModel from "@/models/StoreModel";
 
 const handler = async (req, res) => {
   try {
+    await connectToDatabase()
     const callbackResponse = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -19,13 +21,11 @@ const handler = async (req, res) => {
 
     const host = req.query.host;
     const { shop } = session;
-
-    await prisma.stores.upsert({
-      where: { shop: shop },
-      update: { isActive: true },
-      create: { shop: shop, isActive: true },
-    });
-
+    await StoreModel.findOneAndUpdate(
+      { shop },
+      { isActive: true },
+      { upsert: true }
+    ); 
     // Redirect to app with shop parameter upon auth
     res.redirect(`/?shop=${shop}&host=${host}`);
   } catch (e) {

@@ -4,9 +4,9 @@ import verifyProxy from "./verifyProxy.js";
 import verifyRequest from "./verifyRequest.js";
 
 const withMiddleware = label({
-  verifyRequest: verifyRequest,
-  verifyProxy: verifyProxy,
-  verifyHmac: verifyHmac,
+  verifyRequest,
+  verifyProxy,
+  verifyHmac,
 });
 
 export default withMiddleware;

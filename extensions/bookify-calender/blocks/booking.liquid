@@ -1,0 +1,39 @@
+{% render 'bookify-styles' %}
+<div class="bookify_container">
+    <legend class="form__label">{{ shop.metafields.bookify.settings.themeDurationLabel }}</legend>
+  <div>
+    <div class="bookify_duration_container">
+    </div>
+  </div>
+  <legend class="bookify_datePicker_label form__label mb-0">{{ shop.metafields.bookify.settings.datePickerLabel }}</legend>
+  <div class="input-container mb-0">
+    <input
+      required
+      class="required bookify_datePicker date-input"
+      type="text"
+      id="bookify_datePicker"
+    >
+    <i class="fas fa-calendar-alt"></i>
+  </div>
+    <legend class="form__label">{{ shop.metafields.bookify.settings.themeTimeLabel }}</legend>
+  <div>
+    <div class="bookify_available_times_container"></div>
+    {% render 'bookify-spinner' %}
+  </div>
+</div>
+{% render 'bookify-script' %}
+{% schema %}
+  {
+    "name": "Bookify Date & Time",
+    "target": "section",
+    "templates": ["product"],
+    "settings": [
+      // {
+      //   "type": "color",
+      //   "id": "colour",
+      //   "label": "Star Colour",
+      //   "default": "#ff0000"
+      // }
+    ]
+  }
+{% endschema %}

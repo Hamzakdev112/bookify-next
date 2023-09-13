@@ -1,2 +1,22 @@
-# Necessary for Shopify CLI 3.0 to function as expected. 
-# Please do not delete unless you know what you're doing.
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "Bookify - Time Based Bookings"
+client_id = "f53bd2574a5a10a0afabadbebdd5ff90"
+application_url = "https://6e3b-111-88-27-167.ngrok-free.app"
+embedded = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = [
+  "https://6e3b-111-88-27-167.ngrok-free.app/api/auth/tokens",
+  "https://6e3b-111-88-27-167.ngrok-free.app/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2023-07"
+
+[pos]
+embedded = false

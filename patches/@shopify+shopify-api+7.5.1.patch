@@ -1,0 +1,30 @@
+diff --git a/node_modules/@shopify/shopify-api/lib/auth/oauth/oauth.js b/node_modules/@shopify/shopify-api/lib/auth/oauth/oauth.js
+index 1d31d55..b562c18 100644
+--- a/node_modules/@shopify/shopify-api/lib/auth/oauth/oauth.js
++++ b/node_modules/@shopify/shopify-api/lib/auth/oauth/oauth.js
+@@ -42,7 +42,7 @@ function begin(config) {
+         const state = (0, nonce_1.nonce)();
+         yield cookies.setAndSign(types_2.STATE_COOKIE_NAME, state, {
+             expires: new Date(Date.now() + 60000),
+-            sameSite: 'lax',
++            sameSite: 'none',
+             secure: true,
+             path: callbackPath,
+         });
+@@ -84,6 +84,7 @@ function callback(config) {
+                 keys: [config.apiSecretKey],
+                 secure: true,
+             });
++            console.log('cookies', cookies)
+             const stateFromCookie = yield cookies.getAndVerify(types_2.STATE_COOKIE_NAME);
+             cookies.deleteCookie(types_2.STATE_COOKIE_NAME);
+             if (!stateFromCookie) {
+@@ -119,7 +120,7 @@ function callback(config) {
+             if (!config.isEmbeddedApp) {
+                 yield cookies.setAndSign(types_2.SESSION_COOKIE_NAME, session.id, {
+                     expires: session.expires,
+-                    sameSite: 'lax',
++                    sameSite: 'none',
+                     secure: true,
+                     path: '/',
+                 });

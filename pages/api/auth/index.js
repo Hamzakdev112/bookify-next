@@ -19,7 +19,6 @@ const handler = async (req, res) => {
         shop,
         redirectUri: `/api/auth?shop=${shop}&host=${req.query.host}`,
       }).toString();
-
       return res.redirect(`/exitframe/${queryParams}`);
     }
 

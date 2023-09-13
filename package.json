@@ -17,35 +17,32 @@
     "pretty": "prettier --write ./",
     "update": "ncu -u",
     "update:url": "node _developer/updateDashboard.js",
-    "ngrok:auth": "ngrok authtoken <auth-token-goes-here>",
+    "ngrok:auth": "ngrok authtoken 2MBtBYgfwQ2ZBleM2XCja8edMMJ_3pFqt3ErEEroQKpKKmC6P",
     "ngrok": "ngrok http 3000",
     "-----> Shopify <-----": "",
     "shopify": "shopify",
     "s:e:create": "shopify app generate extension",
     "s:e:deploy": "shopify app deploy",
-    "-----> Database <-----": "",
-    "pg:create": "mkdir database; pg_ctl -D database init",
-    "pg:start": "pg_ctl -D database start",
-    "pg:stop": "pg_ctl -D database stop",
-    "-----> Prisma <-----": "",
-    "prisma": "npx prisma",
-    "prisma:push": "npx prisma db push",
-    "prisma:pull": "npx prisma db pull",
-    "-----> Reserved Scripts <-----": "",
-    "prepare": "npx prisma generate"
+    "postinstall": "patch-package"
   },
   "dependencies": {
-    "@prisma/client": "^5.1.1",
+    "@reduxjs/toolkit": "^1.9.5",
     "@shopify/app-bridge": "^3.7.9",
     "@shopify/app-bridge-react": "^3.7.9",
     "@shopify/polaris": "^11.11.0",
     "@shopify/shopify-api": "^7.5.1",
     "cryptr": "^6.2.0",
     "graphql": "^16.7.1",
+    "luxon": "^3.4.0",
+    "mongoose": "^6.11.1",
     "next": "13.4.13",
     "next-api-middleware": "^2.0.1",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-intersection-observer": "^9.5.2",
+    "react-redux": "^8.1.2"
   },
   "devDependencies": {
     "@shopify/app": "^3.48.1",
@@ -54,8 +51,7 @@
     "dotenv": "^16.3.1",
     "ngrok": "^5.0.0-beta.2",
     "npm-check-updates": "^16.10.18",
-    "prettier": "^3.0.1",
-    "prisma": "^5.1.1"
+    "prettier": "^3.0.1"
   },
   "overrides": {
     "@shopify/cli-kit": {

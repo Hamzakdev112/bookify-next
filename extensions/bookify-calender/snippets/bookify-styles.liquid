@@ -1,0 +1,138 @@
+<style>
+  .bookify_container {
+    display: none;
+  }
+  .bookify_container_active {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bookify_available_times_container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .bookify_available_times_label {
+    color: {% if shop.metafields.bookify.settings.theme == 'light' %}
+      black{% elsif shop.metafields.bookify.settings.theme == 'dark' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_blue' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_green' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_red' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_orange' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_confetti' %}
+      white{% else %}
+      white{% endif %};
+    background-color: {% if shop.metafields.bookify.settings.theme == 'light' %}
+      #eceef1{% elsif shop.metafields.bookify.settings.theme == 'dark' %}
+      #3f4458{% elsif shop.metafields.bookify.settings.theme == 'material_blue' %}
+      #42a5f5{% elsif shop.metafields.bookify.settings.theme == 'material_green' %}
+      #1bbc9b{% elsif shop.metafields.bookify.settings.theme == 'material_red' %}
+      #ef5350{% elsif shop.metafields.bookify.settings.theme == 'material_orange' %}
+      #ff8a65{% elsif shop.metafields.bookify.settings.theme == 'material_confetti' %}
+      #1bbc9b{% else %}
+      white{% endif %};
+    padding: 3px 13px;
+    font-size: 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s ease all;
+  }
+  .bookify_available_times_label:hover {
+    background-color: {% if shop.metafields.bookify.settings.theme == 'light' %}
+      #dbdbdb{% elsif shop.metafields.bookify.settings.theme == 'dark' %}
+      #757ea1{% elsif shop.metafields.bookify.settings.theme == 'material_blue' %}
+      #004c89{% elsif shop.metafields.bookify.settings.theme == 'material_green' %}
+      #03755d{% elsif shop.metafields.bookify.settings.theme == 'material_red' %}
+      #db0400{% elsif shop.metafields.bookify.settings.theme == 'material_orange' %}
+      #d14e25{% else %}
+      white{% endif %};
+  }
+  .input-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .date-input {
+    padding: 10px 35px 10px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+
+  .input-container .fas {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #999;
+    pointer-events: none;
+  }
+
+  .bookify_available_times_input {
+    display: none;
+  }
+
+  .bookify_available_times_input:checked + label {
+    transition: 0.3s ease all;
+    background: {% if shop.metafields.bookify.settings.theme == 'light' %}
+      #dbdbdb{% elsif shop.metafields.bookify.settings.theme == 'dark' %}
+      #757ea1{% elsif shop.metafields.bookify.settings.theme == 'material_blue' %}
+      #004c89{% elsif shop.metafields.bookify.settings.theme == 'material_green' %}
+      #03755d{% elsif shop.metafields.bookify.settings.theme == 'material_red' %}
+      #db0400{% elsif shop.metafields.bookify.settings.theme == 'material_orange' %}
+      #d14e25{% else %}
+      white{% endif %};
+  }
+
+
+  .bookify_duration_container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .bookify_duration_input {
+    display: none
+  }
+  .bookify_duration_label {
+    color: {% if shop.metafields.bookify.settings.theme == 'light' %}
+      black{% elsif shop.metafields.bookify.settings.theme == 'dark' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_blue' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_green' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_red' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_orange' %}
+      white{% elsif shop.metafields.bookify.settings.theme == 'material_confetti' %}
+      white{% else %}
+      white{% endif %};
+    background-color: {% if shop.metafields.bookify.settings.theme == 'light' %}
+      #eceef1{% elsif shop.metafields.bookify.settings.theme == 'dark' %}
+      #3f4458{% elsif shop.metafields.bookify.settings.theme == 'material_blue' %}
+      #42a5f5{% elsif shop.metafields.bookify.settings.theme == 'material_green' %}
+      #1bbc9b{% elsif shop.metafields.bookify.settings.theme == 'material_red' %}
+      #ef5350{% elsif shop.metafields.bookify.settings.theme == 'material_orange' %}
+      #ff8a65{% elsif shop.metafields.bookify.settings.theme == 'material_confetti' %}
+      #1bbc9b{% else %}
+      white{% endif %};
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3px;
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.3s ease all;
+  }
+  .bookify_duration_input:checked + label {
+    transition: 0.3s ease all;
+    background: {% if shop.metafields.bookify.settings.theme == 'light' %}
+      #dbdbdb{% elsif shop.metafields.bookify.settings.theme == 'dark' %}
+      #757ea1{% elsif shop.metafields.bookify.settings.theme == 'material_blue' %}
+      #004c89{% elsif shop.metafields.bookify.settings.theme == 'material_green' %}
+      #03755d{% elsif shop.metafields.bookify.settings.theme == 'material_red' %}
+      #db0400{% elsif shop.metafields.bookify.settings.theme == 'material_orange' %}
+      #d14e25{% else %}
+      white{% endif %}
+  }
+</style>

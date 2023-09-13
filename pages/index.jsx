@@ -1,8 +1,15 @@
+'use client'
+
 import isShopAvailable from "@/utils/middleware/isShopAvailable";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { Redirect } from "@shopify/app-bridge/actions";
-import { Layout, LegacyCard, Page } from "@shopify/polaris";
+import { Banner, Box, Button, Frame, HorizontalStack, Label, Layout, LegacyCard, Loading, Page, VerticalStack } from "@shopify/polaris";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { StoreMajor } from "@shopify/polaris-icons";
+import { useDispatch, useSelector } from "react-redux";
+import useFetch from "@/components/hooks/useFetch";
+import { setShop } from "@/store/slices/shopSlice";
 
 //On first install, check if the store is installed and redirect accordingly
 export async function getServerSideProps(context) {
@@ -13,144 +20,173 @@ const HomePage = () => {
   const router = useRouter();
   const app = useAppBridge();
   const redirect = Redirect.create(app);
+  const fetch = useFetch();
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
+  async function fetchShop(){
+    setLoading(true)
+    const res = await fetch('/api/shop')
+    const data = await res.json()
+    const payload = {}
+    if (data?.shop) {
+      const { shop } = data;
+      console.log(shop);
+      const zone =
+      "UTC" +
+        shop.timezoneOffset.slice(0, 3) +
+        ":" +
+        shop.timezoneOffset.slice(3);
+        payload.shop =  {
+          id: shop.id,
+          myshopifyDomain: shop.myshopifyDomain,
+          zone,
+          name:shop.name
+        }
+        payload.settings = shop.metafield?.value ? JSON.parse(shop.metafield.value) : null
+      const activeSubscriptions = data.appInstallation.activeSubscriptions;
+      if(activeSubscriptions?.length > 0){
+        payload.currentPlan = {
+          name: activeSubscriptions[0].name,
+          status: activeSubscriptions[0].status,
+          id:activeSubscriptions[0].id
+        }
+      }
+      else{
+        payload.currentPlan = {
+          name:"Free",
+          status:'ACTIVE'
+        }
+      }
+      dispatch(setShop(payload));
+      setLoading(false)
+    }
+  }
+  useEffect(()=>{
+    fetchShop()
+            }, [])
+ 
+  const {shop, settings, currentPlan} = useSelector(state=>state.shop)
   return (
-    <Page title="Home">
+    <Frame>
+    {loading && (
+      <>
+        <Loading />
+      </>
+    )}
+    <Page
+      title="Home"
+      primaryAction={<Button  connectedDisclosure={{
+      actions:[
+          {
+            content:(
+              <Box width="300px">
+              <VerticalStack  gap={2}>
+            <Button primary>Starter Guide</Button>
+            <Label>A starter guide for people starting out. This guide will take you through all the steps you need to take in order to get your booking store up and running.</Label>
+            </VerticalStack>
+              </Box>
+              )
+          },
+        ]
+      }}>
+          Help
+        </Button>}
+    >
       <Layout>
-        <Layout.Section fullWidth>
+          <Layout.Section>
+          <Banner title={!shop?.name ? "Fetching shop details..." : shop.name }  icon={StoreMajor}>
+            {
+               shop?.name &&
+              (
+                <VerticalStack as="div" gap={5}>
+                  <VerticalStack gap={1}>
+                <p><b>Zone:</b> {settings ? settings.timeZone.offset : shop.zone}</p>
+                <p><b>Current Plan</b>: {currentPlan.name}</p>
+                  </VerticalStack>
+                <HorizontalStack gap={2}>
+                <Button onClick={()=>router.push('/presets')} primary>Presets</Button>
+                <Button onClick={()=>router.push('/settings')}>Settings</Button>
+                </HorizontalStack>
+                </VerticalStack>
+              )
+            }
+          </Banner>
+        </Layout.Section>
+        <Layout.Section oneHalf>
           <LegacyCard
-            title="Debug Cards"
+            title="Bookings"
             sectioned
             primaryFooterAction={{
-              content: "Debug Cards",
+              content: "Go",
               onAction: () => {
-                router.push("/debug");
+                router.push("/bookings");
               },
             }}
           >
-            <p>
-              Explore how the repository handles data fetching from the backend,
-              App Proxy, making GraphQL requests, Billing API and more.
-            </p>
+            <p>Edit your Bookings</p>
           </LegacyCard>
         </Layout.Section>
         <Layout.Section oneHalf>
           <LegacyCard
+            title="Custom Bookings"
             sectioned
-            title="Repository"
             primaryFooterAction={{
-              content: "GitHub",
+              content: "Go",
               onAction: () => {
-                redirect.dispatch(Redirect.Action.REMOTE, {
-                  url: "https://github.com/kinngh/shopify-nextjs-prisma-app",
-                  newContext: true,
-                });
+                router.push("/custom-bookings");
               },
             }}
-            secondaryFooterActions={[
-              {
-                content: "Open Issue",
-                onAction: () => {
-                  redirect.dispatch(Redirect.Action.REMOTE, {
-                    url: "https://github.com/kinngh/shopify-nextjs-prisma-app/issues?q=is%3Aissue",
-                    newContext: true,
-                  });
-                },
-              },
-            ]}
           >
-            <p>Star the repository, open a new issue or start a discussion.</p>
+            <p>Create custom bookings manually</p>
           </LegacyCard>
+        </Layout.Section>
+        <Layout.Section oneHalf>
           <LegacyCard
+            title="Plans"
             sectioned
-            title="Changelog"
             primaryFooterAction={{
               content: "Explore",
               onAction: () => {
-                redirect.dispatch(Redirect.Action.REMOTE, {
-                  url: "https://shopify.dev/changelog/",
-                  newContext: true,
-                });
+                router.push("/plans");
               },
             }}
           >
-            <p>Explore changelog on Shopify.dev and follow updates.</p>
+            <p>Manage your plans here</p>
+          </LegacyCard>
+        </Layout.Section>
+
+        <Layout.Section oneHalf>
+          <LegacyCard
+            title="Google Calender"
+            sectioned
+            primaryFooterAction={{
+              content: "Explore",
+              onAction: () => {
+                router.push("/calender");
+              },
+            }}
+          >
+            <p>Track your orders here</p>
           </LegacyCard>
         </Layout.Section>
         <Layout.Section oneHalf>
           <LegacyCard
+            title="Webhooks"
             sectioned
-            title="Documentation"
             primaryFooterAction={{
-              content: "Explore APIs",
+              content: "Explore",
               onAction: () => {
-                redirect.dispatch(Redirect.Action.REMOTE, {
-                  url: "https://shopify.dev/graphiql/admin-graphiql",
-                  newContext: true,
-                });
-              },
-            }}
-            secondaryFooterActions={[
-              {
-                content: "Design Guidelines",
-                onAction: () => {
-                  redirect.dispatch(Redirect.Action.REMOTE, {
-                    url: "https://shopify.dev/apps/design-guidelines",
-                    newContext: true,
-                  });
-                },
-              },
-            ]}
-          >
-            <p>
-              Explore the GraphQL APIs in Graphiql or read design guidelines.
-            </p>
-          </LegacyCard>
-          <LegacyCard
-            sectioned
-            title="Hiring?"
-            primaryFooterAction={{
-              content: "Twitter",
-              onAction: () => {
-                redirect.dispatch(Redirect.Action.REMOTE, {
-                  url: "https://www.twitter.com/kinngh",
-                  newContext: true,
-                });
-              },
-            }}
-            secondaryFooterActions={[
-              {
-                content: "LinkedIn",
-                onAction: () => {
-                  redirect.dispatch(Redirect.Action.REMOTE, {
-                    url: "https://www.linkedin.com/in/theharshdeep/",
-                    newContext: true,
-                  });
-                },
-              },
-            ]}
-          >
-            <p>🌎 / 🇨🇦 and looking to expand your engineering team?</p>
-          </LegacyCard>
-        </Layout.Section>
-        <Layout.Section fullWidth>
-          <LegacyCard
-            sectioned
-            title="Developer Notes"
-            primaryFooterAction={{
-              content: "Read More",
-              onAction: () => {
-                router.push("/debug/devNotes");
+                router.push("/webhooks");
               },
             }}
           >
-            <p>
-              Read notes on opening an issue, creating App Extensions and more.
-            </p>
+            <p>List of Active webhooks</p>
           </LegacyCard>
         </Layout.Section>
       </Layout>
     </Page>
+  </Frame>
   );
 };
 

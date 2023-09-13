@@ -15,7 +15,6 @@ const verifyProxy = async (req, res, next) => {
     .createHmac("sha256", process.env.SHOPIFY_API_SECRET)
     .update(queryURI, "utf-8")
     .digest("hex");
-
   if (calculatedSignature === signature) {
     req.user_shop = req.query.shop; //myshopify domain
     await next();

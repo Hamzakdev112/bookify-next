@@ -1,0 +1,358 @@
+<script>
+
+class Bookify {
+  constructor(scripts) {
+  this.bookifyContainer;
+  this.cartButton;
+  this.bookifySetup = {settings:{}, preset:{}};
+  this.selectedDate;
+  this.selectedDuration
+  this.selectedTime
+  this.datePicker;
+  this.selectedVariant = {{ product.selected_or_first_available_variant | json }};
+  this.durationContainer;
+  }
+   async init(scriptstoLoad) {
+       try{
+           this.disableCartButton(true);
+     await this.initializeSetup();
+           if(this.bookifySetup.preset == null) return this.disableCartButton(false);
+     await this.loadScripts(scriptstoLoad);
+           this.setElements();
+           this.bindEventHandlers();
+           this.setCartToCheckout()
+           this.createDurations(this.bookifySetup.preset.duration)
+           this.setFlatPicker()
+           this.addTheme(this.bookifySetup.settings.theme)
+    }catch(err){
+        this.disableCartButton(false);
+         console.log(err)
+    }
+    }
+  
+    addTheme(theme){
+        this.addCssFile(`https://npmcdn.com/flatpickr/dist/themes/${theme}.css`)
+        this.bookifyContainer.classList.add('bookify_container_active')
+        this.datePicker.placeholder = this.bookifySetup.settings.themePlaceholder
+        
+    }
+  
+   addCssFile(url) {
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.href = url;
+    document.head.appendChild(linkElement);
+  }
+    bindEventHandlers(){
+       this.handleDateChange = this.handleDateChange.bind(this);
+      this.handleDurationChange = this.handleDurationChange.bind(this);
+      this.checkTimeSelection = this.checkTimeSelection.bind(this);
+      this.datePicker.onchange = this.handleDateChange;
+      this.trackVariantChange(this.handleVariantChange.bind(this));
+    }
+
+     async initializeSetup(){
+       try{
+      this.bookifySetup.settings= {{ shop.metafields.bookify.settings | json }};
+         console.log(this.bookifySetup.settings)
+      this.bookifySetup.preset = await this.getPreset('{{product.id}}');
+       console.log("bookify-setup", this.bookifySetup)
+       }
+      
+       catch(err){
+         return Promise.reject(err)
+       }
+    }
+
+    setElements(){
+      this.bookifyContainer = document.querySelector('.bookify_container')
+      this.spinner = document.querySelector('.bookify_spinner');
+      this.datePicker = document.getElementById('bookify_datePicker');
+      this.durationContainer = document.querySelector('.bookify_duration_container')
+    }
+
+   createDurations(durations){
+     console.log(durations)
+      durations.forEach((duration, index)=>{
+        
+        const input = document.createElement('input')
+        input.classList.add('bookify_duration_input');
+        input.id = `bookifyDuration${ duration.hours }`;
+        input.type = 'radio'
+        input.value = `${duration.hours} Hours` ;
+        input.setAttribute('form', 'product-form-{{section.id}}');
+        input.name = "properties[Duration]";
+        
+        if(index === 0){
+          input.checked = true;
+          this.selectedDuration = `${duration.hours} Hours`
+        }
+        
+        const label = document.createElement('label');
+        label.innerText = `${ duration.hours }`
+        label.classList.add('bookify_duration_label')
+        label.setAttribute('for', `bookifyDuration${ duration.hours }`)
+
+        this.durationContainer.append(input)
+        this.durationContainer.append(label)
+        input.onchange =  this.handleDurationChange
+      })
+       console.dir(this.durationContainer)
+    }
+     async getPreset(productId){
+       try{
+      const response = await fetch(`/apps/bookify-proxy/get-preset/${productId}`, {
+          headers: {
+          'Content-Type': 'application/json',
+           'ngrok-skip-browser-warning': 'aaa',
+          'Bypass-Tunnel-Reminder': 'true'
+        },
+        });
+      const preset = await response.json();
+         return preset;
+       }
+       catch(err){
+         console.log(err);
+       }
+    }
+  
+  createDraftOrder() {
+    const body = {
+               variantId: this.selectedVariant.id,
+              // properties:,
+              price: this.selectedVariant.price,
+              title:this.selectedVariant.name,
+              currency:`{{ shop.currency }}`,
+              properties:{
+                  Duration:this.selectedDuration,
+                  Date:this.selectedDate,
+                  Time:this.selectedTime,
+                  _Rate:this.calculateRate(),
+                },
+    }
+        fetch('/apps/bookify-proxy/create-checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+             'ngrok-skip-browser-warning': 'aaa',
+          'Bypass-Tunnel-Reminder': 'true'
+          },
+          body: JSON.stringify(body),
+        }).then(response => response.json())
+        .then(data => {
+          console.log(data);
+          const invoiceUrl = data.body?.data?.draftOrderCreate?.draftOrder?.invoiceUrl
+          if(invoiceUrl){
+            window.location.href = invoiceUrl
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+      }
+    
+      async checkBooking() {
+        if(!this.selectedDate)return;
+        let selectedDuration = window.document.querySelector('.bookify_duration_input:checked').value;
+        this.checkBookingInit();
+      selectedDuration = parseInt(selectedDuration.split(' ')[0]);
+        const openingTime = `${this.bookifySetup.preset.timing.openingTime.time} ${this.bookifySetup.preset.timing.openingTime.format}`
+        const closingTime = `${this.bookifySetup.preset.timing.closingTime.time} ${this.bookifySetup.preset.timing.closingTime.format}`
+      try {
+        const body = {
+          productId: {{ product.id }},
+          bookingDate: this.selectedDate,
+          openingTime,
+          closingTime,
+          duration: selectedDuration,
+          gap: this.bookifySetup.preset.gap,
+          zone: this.bookifySetup.settings.timeZone.offset,
+        };
+        console.log(body);
+        const response = await fetch('/apps/bookify-proxy/check-available-bookings', {
+          method: 'POST',
+          headers: {
+          'Content-Type': 'application/json',
+           'ngrok-skip-browser-warning': 'aaa',
+          'Bypass-Tunnel-Reminder': 'true'
+        },
+          body: JSON.stringify(body)
+        });
+        const times = await response.json();
+        this.setTimeSlots(times);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  
+    checkBookingInit() {
+        const availableTimesContainer = document.querySelector('.bookify_available_times_container')
+        console.log(availableTimesContainer)
+        availableTimesContainer.innerHTML = ''
+        this.cartButton.disabled = true;
+        this.spinner.classList.add('bookify_spinner_show');
+      };
+  
+      setTimeSlots(times) {
+      const availableTimesContainer = document.querySelector('.bookify_available_times_container')
+        const productFormId = `product-form-{{section.id}}`;
+      times.forEach((time, index) => {
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "properties[Time]";
+      input.value = time;
+      input.setAttribute('form', productFormId);
+      input.id = `timeSlot${index}`;
+      input.className = "bookify_available_times_input";
+      input.required = true;
+      // this.selectedTime = index == 0 && time
+  
+      var label = document.createElement("label");
+      label.className = "bookify_available_times_label";
+      label.textContent = time;
+      label.setAttribute("for", input.id);
+      availableTimesContainer.appendChild(input);
+      availableTimesContainer.appendChild(label);
+      input.addEventListener('change', this.checkTimeSelection);
+    });
+      this.spinner.classList.remove('bookify_spinner_show');
+    };
+    handleVariantChange(variantId){
+      const allVariants =  {{ product.variants | json }} 
+       const currentVariant =  allVariants.find((v)=>v.id == variantId)
+      this.selectedVariant = currentVariant
+      const selectedTime = document.querySelector('.bookify_available_times_input:checked');
+      if (this.selectedDate && selectedTime) return;
+      const intervalId = setInterval(() => {
+        this.cartButton.disabled = true;
+      }, 100);
+      setTimeout(() => {
+        clearInterval(intervalId);
+      }, 3000);
+    }
+   
+ handleDurationChange(e) {
+  console.log(e.target.value);
+   this.selectedDuration = e.target.value
+  this.checkBooking();
+}
+
+
+calculateRate() {
+    return this.bookifySetup.preset.duration.find(duration => duration.hours == this.selectedDuration.split(' ')[0]).price
+}
+
+    handleDateChange(){
+      this.selectedDate = event.target.value;
+      this.checkBooking();
+    };
+  
+    checkTimeSelection(e){
+      const selectedTime = document.querySelector('.bookify_available_times_input:checked');
+      if (selectedTime) {
+        this.selectedTime =  e.target.value
+        this.cartButton.disabled = false;
+      }
+    }
+    
+    setFlatPicker(){
+      const TIMEZONE = this.bookifySetup.settings.timeZone.offset
+      console.log(TIMEZONE)
+     const today = luxon.DateTime.now().setZone(TIMEZONE).toJSDate()
+    const maxDate = luxon.DateTime.now().setZone(TIMEZONE).plus({days:30}).toJSDate()
+      
+      flatpickr(this.datePicker, {
+      minDate: today,
+      maxDate: maxDate,
+      dateFormat: "Y-m-d",
+      disableMobile: true
+    });
+    }
+
+  setCartToCheckout(){
+         this.cartButton.innerText = 'Book Now'
+          this.cartButton.onclick =  (e)=>{
+          e.preventDefault()
+         this.createDraftOrder()
+        }
+  }
+
+  
+  disableCartButton(isDisabled){
+    setTimeout(() => {
+        this.cartButton = document.querySelector(this.bookifySetup.settings.elementSelectors.addToCart)
+        if (this.cartButton == null | this.cartButton == 'undefined') {
+        disableCartButton();
+      } 
+      else{
+        this.cartButton.disabled = isDisabled;
+      }
+    }, 10);
+  };
+  
+  trackVariantChange(handler) {
+    const track = (fn, handler, before) => {
+      return function interceptor() {
+        if (before) {
+          handler.apply(this, arguments);
+          return fn.apply(this, arguments);
+        } else {
+          var result = fn.apply(this, arguments);
+          handler.apply(this, arguments);
+          return result;
+        }
+      };
+    };
+  
+    const getVariantIdFromURL = () => {
+      return window.location.search.replace(/.*variant=(\d+).*/, '$1') || null;
+    };
+    var currentVariantId = null;
+    const variantHandler = () => {
+      var selectedVariantId = getVariantIdFromURL();
+      if (selectedVariantId !== currentVariantId) {
+        currentVariantId = selectedVariantId;
+        handler(currentVariantId);
+      }
+    };
+    window.history.pushState = track(history.pushState, variantHandler);
+    window.history.replaceState = track(history.replaceState, variantHandler);
+    window.addEventListener('popstate', variantHandler);
+  };
+  
+   loadScripts(scripts, maxRetries = 3, retryDelay = 100) {
+  const loadScript = (url) => {
+    return new Promise((resolve, reject) => {
+      const scriptTag = document.createElement('script');
+      scriptTag.src = url;
+      scriptTag.onload = resolve;
+      scriptTag.onerror = reject;
+      document.body.appendChild(scriptTag);
+    });
+  };
+  
+  const promises = scripts.map((script) => {
+    let retries = 0;
+    const loadWithRetry = () => {
+      return loadScript(script).catch((error) => {
+        if (retries < maxRetries) {
+          retries++;
+          return new Promise((resolve) => setTimeout(resolve, retryDelay))
+            .then(loadWithRetry);
+        } else {
+          throw error; // Reject the promise if retries are exhausted
+        }
+      });
+    };
+  
+    return loadWithRetry();
+  });
+  
+  return Promise.all(promises);
+  }
+  }
+  const scripts = ['https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js', "https://cdn.jsdelivr.net/npm/flatpickr" ]
+  const bookify = new Bookify();
+  bookify.init(scripts);
+
+</script>
